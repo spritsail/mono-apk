@@ -2,7 +2,7 @@
 # Contributor: blattersturm <peachypies@protonmail.ch>
 # Maintainer:  frebib <mono-apk@spritsail.io>
 pkgname=mono
-pkgver=5.12.0.226
+pkgver=5.14.0.177
 pkgrel=0
 pkgdesc="Free implementation of the .NET platform including runtime and compiler"
 url="http://www.mono-project.com/"
@@ -469,7 +469,7 @@ dbg() {
 	done
 }
 
-sha512sums="f4ab3066c9a3545ace0c4af50ddbe58cf5d9ffe4895cc546669f329b91988fcfebab91a070ea46b27536040823a3bbc1bd7e5552a49769988e8271d52662c583  mono-5.12.0.226.tar.bz2
+sha512sums="f13afbe4289e177705642f79f4236710bdc8db8e956782c5370baf22207d6713f7997ec286c7742416c8206d2da205f295437d1afcdc430628d13e32f0e87d2d  $pkgname-$pkgver.tar.bz2
 7403c58fd49105fcc2d488aecef4a9b16ee433127dcb742e3ddfbf87d70be6b07b321045d40c4305577c9bcb91292c8b8f2f93dff366d92217525aae03dd7512  0001-Fix-strerror_r-on-musl-libc.patch"
 
 # vim: ft=sh
