@@ -3,7 +3,7 @@
 # Maintainer:  frebib <mono-apk@spritsail.io>
 pkgname=mono
 pkgver=5.14.0.177
-pkgrel=0
+pkgrel=1
 pkgdesc="Free implementation of the .NET platform including runtime and compiler"
 url="http://www.mono-project.com/"
 arch="x86_64 x86"
@@ -14,6 +14,7 @@ subpackages=" \
 	$pkgname-dbg \
 	$pkgname-dev \
 	$pkgname-lang \
+	$pkgname-corlib \
 	$pkgname-runtime \
 	$pkgname-runtime-doc:runtime_doc:noarch \
 	lib$pkgname:libmono \
@@ -99,6 +100,7 @@ package() {
 
 runtime() {
 	pkgdesc="Mono SGen runtime"
+	depends="$pkgname-corlib"
 
 	mkdir -p "$subpkgdir"/usr/bin \
 			 "$subpkgdir"/usr/lib \
@@ -178,13 +180,20 @@ dev() {
 	done
 }
 
+corlib() {
+	pkgdesc="Mono 4.5 mscorlib.dll"
+
+	mkdir -p "$subpkgdir"/usr/lib/mono/4.5
+	mv	"$pkgdir"/usr/lib/mono/4.5/mscorlib.dll \
+		"$subpkgdir"/usr/lib/mono/4.5/
+}
+
 assemblies() {
 	pkgdesc="Mono 4.5 reference assemblies"
 	depends="$pkgname-runtime"
 
 	mkdir -p "$subpkgdir"/usr/lib/mono/4.5 "$subpkgdir"/usr/lib/mono/gac
-	mv	"$pkgdir"/usr/lib/mono/4.5/mscorlib.dll \
-		"$pkgdir"/usr/lib/mono/4.5/gacutil.exe \
+	mv	"$pkgdir"/usr/lib/mono/4.5/gacutil.exe \
 		"$subpkgdir"/usr/lib/mono/4.5/
 
 	for asm in \
