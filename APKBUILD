@@ -351,7 +351,7 @@ assembliesapi() {
 }
 assembliesfacades() {
 	pkgdesc="Mono 4.5 reference assemblies facades"
-	depends="$pkgname-runtime $pkgname-reference-assemblies"
+	depends="$pkgname-runtime"
 
 	mkdir -p "$subpkgdir"/usr/lib/mono/4.5
 	mv	"$pkgdir"/usr/lib/mono/4.5/Facades \
