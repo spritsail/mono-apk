@@ -3,7 +3,7 @@
 # Maintainer:  frebib <mono-apk@spritsail.io>
 pkgname=mono
 pkgver=5.14.0.177
-pkgrel=1
+pkgrel=2
 pkgdesc="Free implementation of the .NET platform including runtime and compiler"
 url="http://www.mono-project.com/"
 arch="x86_64 x86"
@@ -34,7 +34,8 @@ subpackages=" \
 "
 source=" \
 	http://download.mono-project.com/sources/mono/mono-${pkgver/_/~}.tar.bz2 \
-	0001-Fix-strerror_r-on-musl-libc.patch \
+	928eb4219f6527c23b5924d6e81fa5ba8660f0c4.patch::https://github.com/jaykrell/mono/commit/928eb4219f6527c23b5924d6e81fa5ba8660f0c4.patch \
+	6462ec09a11119e36ea98925993f230b1c4eaa75.patch::https://github.com/mono/mono/commit/6462ec09a11119e36ea98925993f230b1c4eaa75.patch \
 "
 install="ca-certificates-$pkgname.post-deinstall"
 builddir="$srcdir/$pkgname-$pkgver"
@@ -478,7 +479,8 @@ dbg() {
 	done
 }
 
-sha512sums="f13afbe4289e177705642f79f4236710bdc8db8e956782c5370baf22207d6713f7997ec286c7742416c8206d2da205f295437d1afcdc430628d13e32f0e87d2d  $pkgname-$pkgver.tar.bz2
-7403c58fd49105fcc2d488aecef4a9b16ee433127dcb742e3ddfbf87d70be6b07b321045d40c4305577c9bcb91292c8b8f2f93dff366d92217525aae03dd7512  0001-Fix-strerror_r-on-musl-libc.patch"
+sha512sums="f13afbe4289e177705642f79f4236710bdc8db8e956782c5370baf22207d6713f7997ec286c7742416c8206d2da205f295437d1afcdc430628d13e32f0e87d2d  mono-5.14.0.177.tar.bz2
+7d3da02ff6258e488904fbfb737d8cad0b652dfdd076781fa7722bcd14b0163f4783651c96d4de31815b64df3cfed4927c9df8b71dfb0bb4d6acd8b1331cc995  928eb4219f6527c23b5924d6e81fa5ba8660f0c4.patch
+2d669bec0dd5e6b414c049bcefd8d4dcf1a032475d51b8f2b408928f5f7f9c61780153e3609f4c2542abbe9d514fab0da55fc901f02c41e4f1c2a0b9daa60783  6462ec09a11119e36ea98925993f230b1c4eaa75.patch"
 
 # vim: ft=sh noet
