@@ -178,6 +178,9 @@ dev() {
 	for bin in al caspol cccheck ccrewrite cert2spc certmgr chktrust crlupdate csharp disco dtd2rng dtd2xsd genxs httpcfg ikdasm ilasm illinkanalyzer installvst lc macpack makecert mconfig mcs mdbrebase mdoc mkbundle mod mono-api-html mono-api-info mono-cil-strip monolinker monop mono-service mono-shlib-cop mono-symbolicate mono-xmltool mozroots nunit-console pdb2mdb permview resgen secutil setreg sgen signcode sn soapsuds sqlmetal sqlsharp svcutil vbc wsdl xbuild xsd; do
 		mv	"$pkgdir"/usr/bin/${bin} "$subpkgdir"/usr/bin
 		mv	"$pkgdir"/usr/lib/mono/4.5/${bin}.exe "$subpkgdir"/usr/lib/mono/4.5
+		if [ -f "$pkgdir"/usr/lib/mono/4.5/${bin}.exe.config ]; then
+			mv	"$pkgdir"/usr/lib/mono/4.5/${bin}.exe.config "$subpkgdir"/usr/lib/mono/4.5
+		fi
 	done
 }
 
