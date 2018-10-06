@@ -3,7 +3,7 @@
 # Maintainer:  frebib <mono-apk@spritsail.io>
 pkgname=mono
 pkgver=5.14.0.177
-pkgrel=2
+pkgrel=3
 pkgdesc="Free implementation of the .NET platform including runtime and compiler"
 url="http://www.mono-project.com/"
 arch="x86_64 x86"
@@ -142,7 +142,7 @@ runtime_doc() {
 
 cacerts() {
 	pkgdesc="Mono CA certificates sync utility"
-	depends="$pkgname-runtime ca-certificates"
+	depends="$pkgname-reference-assemblies ca-certificates"
 
 	mkdir -p "$subpkgdir"/usr/bin "$subpkgdir"/usr/lib/mono/4.5
 	mv "$pkgdir"/usr/bin/cert-sync "$subpkgdir"/usr/bin
