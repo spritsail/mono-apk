@@ -3,7 +3,7 @@ workspace:
 
 pipeline:
   build:
-    image: spritsail/abuild:3.8
+    image: spritsail/abuild:3.9
     privileged: true
     secrets: [ signingkey, sshkey ]
     publickey: https://alpine.spritsail.io/spritsail-alpine.rsa.pub
