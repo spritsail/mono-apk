@@ -2,7 +2,7 @@
 # Contributor: blattersturm <peachypies@protonmail.ch>
 # Maintainer:  frebib <mono-apk@spritsail.io>
 pkgname=mono
-pkgver=5.16.0.179
+pkgver=5.18.0.240
 pkgrel=0
 pkgdesc="Free implementation of the .NET platform including runtime and compiler"
 url="http://www.mono-project.com/"
@@ -482,6 +482,6 @@ dbg() {
 	done
 }
 
-sha512sums="17d29dc19e3694abd236a50dda99ab85a215d1e88b8d6474c8b8b638dfe8a0f8d60ee3d3d5da600a861cfe6a0dda77cbf3594e9c5dd8b599c80363b4f01d9f1e  mono-5.16.0.179.tar.bz2
+sha512sums="4add3744325d6d920d3d83f320b8ed58c48557dd6cadc44866aa137007489a376b09e2acfc82b6ce132d5a5c65b56d3ce9e2dda08e7f2f8b203117379f7f1fc6  mono-5.18.0.240.tar.bz2
 7d3da02ff6258e488904fbfb737d8cad0b652dfdd076781fa7722bcd14b0163f4783651c96d4de31815b64df3cfed4927c9df8b71dfb0bb4d6acd8b1331cc995  928eb4219f6527c23b5924d6e81fa5ba8660f0c4.patch
 2d669bec0dd5e6b414c049bcefd8d4dcf1a032475d51b8f2b408928f5f7f9c61780153e3609f4c2542abbe9d514fab0da55fc901f02c41e4f1c2a0b9daa60783  6462ec09a11119e36ea98925993f230b1c4eaa75.patch"
