@@ -2,7 +2,7 @@
 # Contributor: blattersturm <peachypies@protonmail.ch>
 # Maintainer:  frebib <mono-apk@spritsail.io>
 pkgname=mono
-pkgver=5.20.1.19
+pkgver=6.8.0.105
 pkgrel=0
 pkgdesc="Free implementation of the .NET platform including runtime and compiler"
 url="http://www.mono-project.com/"
@@ -33,7 +33,7 @@ subpackages=" \
 	$pkgname-reference-assemblies-4.x:assemblies4x:noarch \
 "
 source=" \
-	http://download.mono-project.com/sources/mono/mono-${pkgver/_/~}.tar.bz2 \
+	http://download.mono-project.com/sources/mono/mono-${pkgver/_/~}.tar.xz \
 "
 install="ca-certificates-$pkgname.post-deinstall"
 builddir="$srcdir/$pkgname-$pkgver"
@@ -480,4 +480,4 @@ dbg() {
 	done
 }
 
-sha512sums="498fffc70c524cf21477196b6fdc3c5d03a719098c0a0ca40c29e239588675ddc0538659e4119171316f8f35555fcd42390d474dff0b795bf67188bc34a35ae0  mono-5.20.1.19.tar.bz2"
+sha512sums="8207082f6c538037a17dba5e22576d8e9b0aac946df270ff34daad0857e7b1cfd71c8cf4851e74dd5338397c9587540f11b23e71776bca6dc2a1b89dbed2fd7e  mono-6.8.0.105.tar.xz"
