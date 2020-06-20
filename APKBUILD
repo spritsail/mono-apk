@@ -1,49 +1,50 @@
+# vim: ft=sh noet
 # Contributor: Carlo Landmeter <clandmeter@gmail.com>
 # Contributor: blattersturm <peachypies@protonmail.ch>
 # Maintainer:  frebib <mono-apk@spritsail.io>
+
 pkgname=mono
-pkgver=6.8.0.105
+pkgver=6.8.0.123
 pkgrel=0
 pkgdesc="Free implementation of the .NET platform including runtime and compiler"
-url="http://www.mono-project.com/"
-arch="x86_64 x86"
-license="GPL"
-depends_dev="zlib-dev libgdiplus-dev"
-makedepends="$depends_dev python2 linux-headers paxmark autoconf automake libtool cmake"
-subpackages=" \
-	$pkgname-dbg \
-	$pkgname-dev \
-	$pkgname-lang \
-	$pkgname-corlib \
-	$pkgname-runtime \
-	$pkgname-runtime-doc:runtime_doc:noarch \
-	lib$pkgname:libmono \
+url="https://www.mono-project.com/"
+arch="x86_64 x86 armv7"
+license="MIT"
+depends_dev="libgdiplus-dev zlib-dev"
+makedepends="$depends_dev autoconf automake cmake libtool linux-headers paxmark python3"
+subpackages="
+	$pkgname-dbg
+	$pkgname-dev
+	$pkgname-lang
+	$pkgname-runtime
+	$pkgname-runtime-doc:runtime_doc:noarch
+	lib$pkgname:libmono
+	lib$pkgname:libmono_profiler
 	ca-certificates-$pkgname:cacerts:noarch
 	ca-certificates-$pkgname-doc:cacerts_doc:noarch
-	$pkgname-utils:utils:noarch \
-	$pkgname-csc:csc:noarch \
-	$pkgname-xbuild:xbuild:noarch \
-	$pkgname-doc \
-	$pkgname-reference-assemblies-facades:assembliesfacades:noarch \
-	$pkgname-reference-assemblies-api:assembliesapi:noarch \
-	$pkgname-reference-assemblies:assemblies:noarch \
-	$pkgname-reference-assemblies-2.0:assemblies20:noarch \
-	$pkgname-reference-assemblies-3.5:assemblies35:noarch \
-	$pkgname-reference-assemblies-4.0:assemblies40:noarch \
-	$pkgname-reference-assemblies-4.x:assemblies4x:noarch \
+	monodoc::noarch
+	$pkgname-utils
+	$pkgname-csc::noarch
+	$pkgname-xbuild::noarch
+	$pkgname-doc
+	$pkgname-reference-assemblies-facades:assembliesfacades:noarch
+	$pkgname-reference-assemblies-api:assembliesapi:noarch
+	$pkgname-reference-assemblies:assemblies:noarch
+	$pkgname-reference-assemblies-2.0:assemblies20:noarch
+	$pkgname-reference-assemblies-3.5:assemblies35:noarch
+	$pkgname-reference-assemblies-4.0:assemblies40:noarch
+	$pkgname-reference-assemblies-4.x:assemblies4x:noarch
 "
-source=" \
-	http://download.mono-project.com/sources/mono/mono-${pkgver/_/~}.tar.xz \
+source="
+	https://download.mono-project.com/sources/mono/mono-${pkgver/_/~}.tar.xz
+	0001-Force-Python-3.x-from-env-in-shebang-lines.patch
+	0001-Avoid-setting-PTHREAD_PRIO_INHERIT-on-Alpine-since-t.patch
 "
 install="ca-certificates-$pkgname.post-deinstall"
 builddir="$srcdir/$pkgname-$pkgver"
 
 prepare() {
 	default_prepare
-	cd "$builddir"
-
-	# Remove hardcoded lib directory from the config.
-	sed -i 's|$mono_libdir/||g' data/config.in
 
 	# We need to do this so it don't get killed in the build proces when
 	# MPROTECT and RANDMMAP is enable.
@@ -52,8 +53,6 @@ prepare() {
 }
 
 build() {
-	cd "$builddir"
-
 	# Based on Fedora and SUSE package.
 	export CFLAGS="$CFLAGS -fno-strict-aliasing"
 
@@ -74,6 +73,7 @@ build() {
 		--disable-rpath \
 		--disable-boehm \
 		--enable-parallel-mark \
+		--with-large-heap=yes \
 		--with-x=no \
 		--with-libgc=none \
 		--with-mcs-docs=no \
@@ -83,51 +83,60 @@ build() {
 }
 
 package() {
-	cd "$builddir"
 	make -j1 DESTDIR="$pkgdir" install
 
 	cd "$pkgdir"
 
-	paxmark mr ./usr/bin/mono-sgen
+	paxmark mr usr/bin/mono-sgen
+	sed -i 's|$mono_libdir/||g' etc/mono/config
 
 	# Remove .la files.
-	rm ./usr/lib/*.la
-
+	rm usr/lib/*.la
 	# Remove Windows-only stuff.
-	rm -rf	usr/lib/mono/*/Mono.Security.Win32*
+	rm -rf usr/lib/mono/*/Mono.Security.Win32*
+}
+
+subpkg_mv() {
+	local f= d=
+
+	for f in "$@"; do
+		if [ -e "$pkgdir/$f" ] || [ -L "$pkgdir/$f" ]; then
+			d="$subpkgdir/${f%/*}"
+			mkdir -p "$d"
+			mv "$pkgdir/$f" "$d"
+			rmdir -p "$pkgdir/${f%/*}" 2>/dev/null || :
+		fi
+	done
 }
 
 runtime() {
 	pkgdesc="Mono SGen runtime"
-	depends="$pkgname-corlib"
 
-	mkdir -p "$subpkgdir"/usr/bin \
-			 "$subpkgdir"/usr/lib \
-			 "$subpkgdir"/etc/mono \
-			 "$subpkgdir"/usr/share/mono-2.0/mono
-
-	mv	"$pkgdir"/etc/mono/config \
-		"$pkgdir"/etc/mono/mconfig \
-		"$pkgdir"/etc/mono/browscap.ini \
-		"$pkgdir"/etc/mono/2.0 \
-		"$pkgdir"/etc/mono/4.0 \
-		"$pkgdir"/etc/mono/4.5 \
-		"$subpkgdir"/etc/mono
-	mv	"$pkgdir"/usr/bin/mono \
-		"$pkgdir"/usr/bin/mono-sgen \
-		"$subpkgdir"/usr/bin
-	mv	"$pkgdir"/usr/lib/libMonoSupportW.* \
-		"$pkgdir"/usr/lib/libMonoPosixHelper.so \
-		"$pkgdir"/usr/lib/libmono-btls-shared.so \
-		"$subpkgdir"/usr/lib
-	mv	"$pkgdir"/usr/share/mono-2.0/mono/cil \
-		"$subpkgdir"/usr/share/mono-2.0/mono
+	cd "$pkgdir"
+	subpkg_mv \
+		etc/mono/2.0 \
+		etc/mono/4.0 \
+		etc/mono/4.5 \
+		etc/mono/browscap.ini \
+		etc/mono/config \
+		etc/mono/mconfig \
+		usr/bin/mono \
+		usr/bin/mono-hang-watchdog \
+		usr/bin/mono-sgen \
+		usr/lib/libMonoPosixHelper.so \
+		usr/lib/libMonoSupportW.so \
+		usr/lib/libmono-btls-shared.so \
+		usr/lib/libmono-native.so* \
+		usr/lib/mono/4.5/mscorlib.dll \
+		usr/lib/mono/gac/Mono.Cecil \
+		usr/share/mono-2.0/mono/cil
 }
 
 runtime_doc() {
 	pkgdesc="Mono runtime documentation"
 	depends="$pkgname-runtime"
 
+	local manpage=
 	for manpage in \
 		usr/share/man/man1/mono.1 \
 		usr/share/man/man5/mono-config.5
@@ -170,34 +179,106 @@ dev() {
 	pkgdesc="Mono runtime development files and utilities"
 	depends="$pkgname-runtime"
 
-	default_dev
+	cd "$pkgdir"
+	subpkg_mv \
+		usr/include \
+		usr/lib/pkgconfig \
+		usr/lib/mono-source-libs \
+		usr/lib/mono/mono-configuration-crypto \
+		$(find usr -name '*.[acho]' 2>/dev/null)
 
-	mkdir -p "$subpkgdir"/usr/bin "$subpkgdir"/usr/lib/mono/4.5
-	for bin in al caspol cccheck ccrewrite cert2spc certmgr chktrust crlupdate csharp disco dtd2rng dtd2xsd genxs httpcfg ikdasm ilasm illinkanalyzer installvst lc macpack makecert mconfig mcs mdbrebase mdoc mkbundle mod mono-api-html mono-api-info mono-cil-strip monolinker monop mono-service mono-shlib-cop mono-symbolicate mono-xmltool mozroots nunit-console pdb2mdb permview resgen secutil setreg sgen signcode sn soapsuds sqlmetal sqlsharp svcutil vbc wsdl xbuild xsd; do
-		mv	"$pkgdir"/usr/bin/${bin} "$subpkgdir"/usr/bin
-		mv	"$pkgdir"/usr/lib/mono/4.5/${bin}.exe "$subpkgdir"/usr/lib/mono/4.5
-		if [ -f "$pkgdir"/usr/lib/mono/4.5/${bin}.exe.config ]; then
-			mv	"$pkgdir"/usr/lib/mono/4.5/${bin}.exe.config "$subpkgdir"/usr/lib/mono/4.5
-		fi
+	local bin=
+	for bin in \
+			RabbitMQ.Client.Apigen \
+			al \
+			al2 \
+			aprofutil \
+			browsercaps-updater \
+			caspol \
+			cccheck \
+			ccrewrite \
+			cert2spc \
+			certmgr \
+			chktrust \
+			crlupdate \
+			culevel \
+			disco \
+			dtd2rng \
+			dtd2xsd \
+			genxs \
+			httpcfg \
+			ictool \
+			ikdasm \
+			ilasm \
+			illinkanalyzer \
+			installutil \
+			installvst \
+			lc \
+			macpack \
+			makecert \
+			mconfig \
+			mdbrebase \
+			mkbundle \
+			mono-api-check \
+			mono-api-diff \
+			mono-api-html \
+			mono-api-info \
+			mono-cil-strip \
+			mono-configuration-crypto \
+			mono-csc \
+			mono-heapviz \
+			mono-package-runtime \
+			mono-service \
+			mono-service2 \
+			mono-shlib-cop \
+			mono-symbolicate \
+			mono-test-install \
+			mono-xmltool \
+			monolinker \
+			monop \
+			monop2 \
+			mozroots \
+			pdb2mdb \
+			permview \
+			resgen \
+			resgen2 \
+			secutil \
+			setreg \
+			sgen \
+			sgen-grep-binprot \
+			signcode \
+			sn \
+			soapsuds \
+			sqlmetal \
+			sqlsharp \
+			svcutil \
+			wsdl \
+			wsdl2 \
+			xsd
+	do
+		subpkg_mv \
+			usr/bin/${bin} \
+			usr/lib/mono/4.5/${bin}.exe \
+			usr/lib/mono/4.5/${bin}.exe.config \
+			usr/lib/mono/gac/${bin}
 	done
-}
-
-corlib() {
-	pkgdesc="Mono 4.5 mscorlib.dll"
-
-	mkdir -p "$subpkgdir"/usr/lib/mono/4.5
-	mv	"$pkgdir"/usr/lib/mono/4.5/mscorlib.dll \
-		"$subpkgdir"/usr/lib/mono/4.5/
 }
 
 assemblies() {
 	pkgdesc="Mono 4.5 reference assemblies"
 	depends="$pkgname-runtime"
 
-	mkdir -p "$subpkgdir"/usr/lib/mono/4.5 "$subpkgdir"/usr/lib/mono/gac
-	mv	"$pkgdir"/usr/lib/mono/4.5/gacutil.exe \
-		"$subpkgdir"/usr/lib/mono/4.5/
+	cd "$pkgdir"
+	subpkg_mv \
+		usr/bin/gacutil \
+		usr/bin/gacutil2 \
+		usr/lib/mono/4.5/gacutil.exe
 
+	mkdir -p \
+		"$subpkgdir"/usr/lib/mono/4.5 \
+		"$subpkgdir"/usr/lib/mono/gac
+
+	local asm=
 	for asm in \
 		Accessibility \
 		Commons.Xml.Relaxng \
@@ -228,20 +309,11 @@ assemblies() {
 		Mono.Messaging.RabbitMQ \
 		Mono.Parallel \
 		Mono.Posix \
-		Mono.Profiler.Log \
 		Mono.Security \
 		Mono.Simd \
 		Mono.Tasklets \
 		Mono.WebBrowser \
 		Novell.Directory.Ldap \
-		nunit-console-runner \
-		nunit.core \
-		nunit.core.extensions \
-		nunit.core.interfaces \
-		nunit.framework \
-		nunit.framework.extensions \
-		nunit.mocks \
-		nunit.util \
 		PEAPI \
 		RabbitMQ.Client \
 		SMDiagnostics \
@@ -273,6 +345,7 @@ assemblies() {
 		System.Json \
 		System.Json.Microsoft \
 		System.Management \
+		System.Memory \
 		System.Messaging \
 		System.Net \
 		System.Net.Http \
@@ -293,6 +366,7 @@ assemblies() {
 		System.Reactive.Windows.Threading \
 		System.Reflection.Context \
 		System.Runtime.Caching \
+		System.Runtime.CompilerServices.Unsafe \
 		System.Runtime.DurableInstancing \
 		System.Runtime.Remoting \
 		System.Runtime.Serialization \
@@ -306,6 +380,7 @@ assemblies() {
 		System.ServiceModel.Web \
 		System.ServiceProcess \
 		System.Threading.Tasks.Dataflow \
+		System.Threading.Tasks.Extensions \
 		System.Transactions \
 		System.Web.Abstractions \
 		System.Web.ApplicationServices \
@@ -339,7 +414,9 @@ assemblies() {
 		WindowsBase
 	do
 		mv	"$pkgdir"/usr/lib/mono/4.5/${asm}.dll "$subpkgdir"/usr/lib/mono/4.5/
-		mv	"$pkgdir"/usr/lib/mono/gac/${asm} "$subpkgdir"/usr/lib/mono/gac/
+		if [ -L "$subpkgdir/usr/lib/mono/4.5/${asm}.dll" ]; then
+			mv	"$pkgdir"/usr/lib/mono/gac/${asm} "$subpkgdir"/usr/lib/mono/gac/
+		fi
 	done
 
 }
@@ -347,137 +424,163 @@ assembliesapi() {
 	pkgdesc="Mono 4.5 api reference assemblies"
 	depends="$pkgname-runtime $pkgname-reference-assemblies"
 
-	mkdir -p "$subpkgdir"/usr/lib/mono
-	mv	"$pkgdir"/usr/lib/mono/4.5-api \
-		"$subpkgdir"/usr/lib/mono/
+	cd "$pkgdir"
+	subpkg_mv usr/lib/mono/4.5-api
 }
 assembliesfacades() {
 	pkgdesc="Mono 4.5 reference assemblies facades"
 	depends="$pkgname-runtime"
 
-	mkdir -p "$subpkgdir"/usr/lib/mono/4.5
-	mv	"$pkgdir"/usr/lib/mono/4.5/Facades \
-		"$subpkgdir"/usr/lib/mono/4.5
+	cd "$pkgdir"
+	subpkg_mv usr/lib/mono/4.5/Facades
 }
 
 assemblies20() {
 	pkgdesc="Mono 2.0 reference assemblies"
 	depends="$pkgname-runtime"
 
-	mkdir -p "$subpkgdir"/usr/lib/mono
-	mv	"$pkgdir"/usr/lib/mono/2.0-api "$subpkgdir"/usr/lib/mono/
+	cd "$pkgdir"
+	subpkg_mv usr/lib/mono/2.0-api
 }
 assemblies35() {
 	pkgdesc="Mono 3.5 reference assemblies"
 	depends="$pkgname-runtime $pkgname-reference-assemblies-2.0"
 
-	mkdir -p "$subpkgdir"/usr/lib/mono
-	mv	"$pkgdir"/usr/lib/mono/3.5-api "$subpkgdir"/usr/lib/mono/
+	cd "$pkgdir"
+	subpkg_mv usr/lib/mono/3.5-api
 }
 assemblies40() {
 	pkgdesc="Mono 4.0 reference assemblies"
 	depends="$pkgname-runtime"
 
-	mkdir -p "$subpkgdir"/usr/lib/mono
-	mv	"$pkgdir"/usr/lib/mono/4.0 \
-		"$pkgdir"/usr/lib/mono/4.0-api \
-		"$subpkgdir"/usr/lib/mono/
+	cd "$pkgdir"
+	subpkg_mv \
+		usr/lib/mono/4.0 \
+		usr/lib/mono/4.0-api
 }
 
 assemblies4x() {
 	pkgdesc="Mono 4.x reference assemblies"
 	depends="$pkgname-runtime $pkgname-reference-assemblies"
 
-	mkdir -p "$subpkgdir"/usr/lib/mono
-	mv	"$pkgdir"/usr/lib/mono/4.*-api "$subpkgdir"/usr/lib/mono/
+	cd "$pkgdir"
+	subpkg_mv usr/lib/mono/4.*-api
 }
 
 libmono() {
 	pkgdesc="Shared library for Mono runtime"
 
-	install -d "$subpkgdir"/usr/lib
-	mv	"$pkgdir"/usr/lib/libmono-2.0.so* \
-		"$pkgdir"/usr/lib/libmonosgen-2.0.so* \
-		"$subpkgdir"/usr/lib
+	cd "$pkgdir"
+	subpkg_mv \
+		usr/lib/libmono-2.0.so* \
+		usr/lib/libmonosgen-2.0.so* \
+		usr/share/mono-2.0/mono/profiler
+}
+
+libmono_profiler() {
+	pkgdesc="Profiler libraries for Mono, used for profiling applications running on Mono"
+
+	cd "$pkgdir"
+	subpkg_mv \
+		usr/lib/libmono-profiler-*.so* \
+		usr/lib/mono/4.5/Mono.Profiler.Log.dll \
+		usr/lib/mono/gac/Mono.Profiler.Log
+}
+
+monodoc() {
+	pkgdesc="Monodoc is a set of libraries and applications for viewing and editing Mono class library documentation."
+	depends="$pkgname-runtime"
+
+	cd "$pkgdir"
+	subpkg_mv \
+		usr/bin/mdoc* \
+		usr/bin/mod \
+		usr/bin/monodoc* \
+		usr/bin/mdassembler \
+		usr/bin/mdvalidater \
+		usr/lib/mono/4.5/mdoc.exe \
+		usr/lib/mono/4.5/mod.exe \
+		usr/lib/mono/monodoc \
+		usr/lib/mono/gac/monodoc
 }
 
 utils() {
 	pkgdesc="Common utilities for Mono runtime"
-	#depends="$subpkgname-doc"
+	depends="$pkgname-runtime"
 
-	install -d "$subpkgdir"/usr/bin
-	mv	"$pkgdir"/usr/bin/mono-find-provides \
-		"$pkgdir"/usr/bin/mono-find-requires \
-		"$pkgdir"/usr/bin/peverify \
-		"$subpkgdir"/usr/bin
-		#
-		#"$pkgdir"/usr/bin/monodis \
-		#"$pkgdir"/usr/bin/mprof-report \
-		#"$pkgdir"/usr/bin/pedump \
+	cd "$pkgdir"
+	subpkg_mv \
+		usr/bin/mono-find-provides \
+		usr/bin/mono-find-requires \
+		usr/bin/monodis \
+		usr/bin/mprof-report \
+		usr/bin/pedump \
+		usr/bin/peverify
 }
 
 csc() {
-	pkgdesc="Mono C# compiler (csc/csc-dim)"
+	pkgdesc="Mono C# compiler (csc)"
 	depends="$pkgname-runtime $pkgname-reference-assemblies $pkgname-reference-assemblies-facades"
 
-	mkdir -p "$subpkgdir"/usr/lib/mono/4.5 "$subpkgdir"/usr/bin
-	mv	"$pkgdir"/usr/lib/mono/4.5/csc.exe \
-		"$pkgdir"/usr/lib/mono/4.5/csc.exe.config \
-		"$pkgdir"/usr/lib/mono/4.5/csc.rsp \
-		"$pkgdir"/usr/lib/mono/4.5/csi.exe \
-		"$pkgdir"/usr/lib/mono/4.5/csi.exe.config \
-		"$pkgdir"/usr/lib/mono/4.5/csi.rsp \
-		"$pkgdir"/usr/lib/mono/4.5/dim \
-		"$pkgdir"/usr/lib/mono/4.5/System.Collections.Immutable.dll \
-		"$pkgdir"/usr/lib/mono/4.5/System.Reflection.Metadata.dll \
-		"$pkgdir"/usr/lib/mono/4.5/Microsoft.CodeAnalysis.dll \
-		"$pkgdir"/usr/lib/mono/4.5/Microsoft.CodeAnalysis.Scripting.dll \
-		"$pkgdir"/usr/lib/mono/4.5/Microsoft.CodeAnalysis.CSharp.dll \
-		"$pkgdir"/usr/lib/mono/4.5/Microsoft.CodeAnalysis.CSharp.Scripting.dll \
-		"$subpkgdir"/usr/lib/mono/4.5
-	mv	"$pkgdir"/usr/bin/csc \
-		"$pkgdir"/usr/bin/csi \
-		"$pkgdir"/usr/bin/csc-dim \
-		"$pkgdir"/usr/bin/gacutil \
-		"$pkgdir"/usr/bin/gacutil2 \
-		"$subpkgdir"/usr/bin
+	cd "$pkgdir"
+
+	local asm=
+	for bin in \
+		csc \
+		csharp \
+		csi \
+		dmcs \
+		mcs \
+		vbc
+	do
+		subpkg_mv \
+			usr/bin/${bin} \
+			usr/lib/mono/4.5/${bin}.exe \
+			usr/lib/mono/4.5/${bin}.exe.config \
+			usr/lib/mono/4.5/${bin}.rsp
+	done
+
+	subpkg_mv \
+		usr/lib/mono/4.5/VBCSCompiler.exe \
+		usr/lib/mono/4.5/VBCSCompiler.exe.config \
+		usr/lib/mono/4.5/System.Collections.Immutable.dll \
+		usr/lib/mono/4.5/System.Reflection.Metadata.dll \
+		usr/lib/mono/4.5/Microsoft.CodeAnalysis.*
 }
 
 xbuild() {
 	pkgdesc="xbuild build system for Mono runtime"
 	depends="$pkgname-runtime $pkgname-reference-assemblies $pkgname-csc"
 
-	mkdir -p "$subpkgdir"/usr/lib/mono/gac "$subpkgdir"/usr/lib/mono/4.5
-	mv	"$pkgdir"/usr/lib/mono/monodoc \
-		"$pkgdir"/usr/lib/mono/msbuild \
-		"$pkgdir"/usr/lib/mono/xbuild \
-		"$pkgdir"/usr/lib/mono/xbuild-frameworks \
-		"$subpkgdir"/usr/lib/mono
-	mv	"$pkgdir"/usr/lib/mono/4.5/Microsoft.Build* \
-		"$pkgdir"/usr/lib/mono/4.5/Mono.XBuild.Tasks* \
-		"$pkgdir"/usr/lib/mono/4.5/MSBuild \
-		"$pkgdir"/usr/lib/mono/4.5/*.targets \
-		"$pkgdir"/usr/lib/mono/4.5/*.tasks \
-		"$subpkgdir"/usr/lib/mono/4.5
-	mv	"$pkgdir"/usr/lib/mono/gac/Microsoft.Build* \
-		"$pkgdir"/usr/lib/mono/gac/Mono.XBuild.Tasks* \
-		"$subpkgdir"/usr/lib/mono/gac
+	cd "$pkgdir"
+	subpkg_mv \
+		usr/bin/xbuild \
+		usr/lib/mono/msbuild \
+		usr/lib/mono/xbuild \
+		usr/lib/mono/xbuild-frameworks \
+		usr/lib/mono/4.5/Microsoft.Build* \
+		usr/lib/mono/4.5/Mono.XBuild.Tasks* \
+		usr/lib/mono/4.5/MSBuild \
+		usr/lib/mono/4.5/*.targets \
+		usr/lib/mono/4.5/*.tasks \
+		usr/lib/mono/4.5/xbuild.* \
+		usr/lib/mono/gac/Microsoft.Build* \
+		usr/lib/mono/gac/Mono.XBuild.Tasks*
 }
 
 dbg() {
 	default_dbg
 	depends="$pkgname"
 
-	mkdir -p "$subpkgdir"/usr/bin "$subpkgdir"/usr/lib/mono
-	mv	"$pkgdir"/usr/lib/mono/lldb "$subpkgdir"/usr/lib/mono
+	mkdir -p "$subpkgdir"/usr/lib/debug/usr/bin
 	mv	"$pkgdir"/usr/bin/mono*-gdb.py "$subpkgdir"/usr/lib/debug/usr/bin/
 
-	local file
-	find "$pkgdir" \( -name '*.pdb' -o -name '*.mdb' \) | while read file; do
-		local destfile="$(echo "$file" | sed "s|$pkgdir|$subpkgdir|")"
-		mkdir -p "$(dirname "$destfile")"
-		mv	"$file" "$destfile"
-	done
+	cd "$pkgdir"
+	subpkg_mv \
+		usr/lib/mono/lldb \
+		$(find \( -name '*.pdb' -o -name '*.mdb' \) 2>/dev/null)
 }
 
-sha512sums="8207082f6c538037a17dba5e22576d8e9b0aac946df270ff34daad0857e7b1cfd71c8cf4851e74dd5338397c9587540f11b23e71776bca6dc2a1b89dbed2fd7e  mono-6.8.0.105.tar.xz"
+sha512sums="f702d1ee3a7e8b1a028de02fe6f3ab78e1c5171a547c37db7e934c33533984f2847636476407ad46daeb150640136d6bb28c12c9482c1806997df2dfd7a839f1  mono-6.8.0.123.tar.xz
+8f7ce3cbb4aca6eda3c95a52a99aab40ce3dd360959ce827b2d44e814d8464cf057debd97cb8625e391d414df947ad767f13b12b9e3ce44c5c9895143bc68e32  0001-Force-Python-3.x-from-env-in-shebang-lines.patch
+e2326e672faf88d7acf9e74099865e5f97b6802b1c5d8c628d3c53c44aa2afdf99a1114e0f7857178a8ea166b940977d5cde1015c181d9b105e1241de78d38b9  0001-Avoid-setting-PTHREAD_PRIO_INHERIT-on-Alpine-since-t.patch"

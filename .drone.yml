@@ -11,8 +11,8 @@ workspace:
 
 steps:
 - name: build
+  image: spritsail/abuild:3.12
   pull: always
-  image: spritsail/abuild:3.11
   settings:
     publickey: https://alpine.spritsail.io/spritsail-alpine.rsa.pub
     repo_sshfs: "drone-upload@web.spritsail.io:"
