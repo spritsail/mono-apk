@@ -4,7 +4,7 @@
 # Maintainer:  frebib <mono-apk@spritsail.io>
 
 pkgname=mono
-pkgver=6.8.0.123
+pkgver=6.12.0.107
 pkgrel=0
 pkgdesc="Free implementation of the .NET platform including runtime and compiler"
 url="https://www.mono-project.com/"
@@ -37,7 +37,6 @@ subpackages="
 "
 source="
 	https://download.mono-project.com/sources/mono/mono-${pkgver/_/~}.tar.xz
-	0001-Force-Python-3.x-from-env-in-shebang-lines.patch
 	0001-Avoid-setting-PTHREAD_PRIO_INHERIT-on-Alpine-since-t.patch
 "
 install="ca-certificates-$pkgname.post-deinstall"
@@ -581,6 +580,5 @@ dbg() {
 		$(find \( -name '*.pdb' -o -name '*.mdb' \) 2>/dev/null)
 }
 
-sha512sums="f702d1ee3a7e8b1a028de02fe6f3ab78e1c5171a547c37db7e934c33533984f2847636476407ad46daeb150640136d6bb28c12c9482c1806997df2dfd7a839f1  mono-6.8.0.123.tar.xz
-8f7ce3cbb4aca6eda3c95a52a99aab40ce3dd360959ce827b2d44e814d8464cf057debd97cb8625e391d414df947ad767f13b12b9e3ce44c5c9895143bc68e32  0001-Force-Python-3.x-from-env-in-shebang-lines.patch
+sha512sums="567cd37847bd5a0bf78df8a3ada2ed2cfb10e466fffb5aadc3d145751552720bdd1fc2a734fba142b91f2e221f42b6717d6eb3f7c8823cbec3d458b10712d7ea  mono-6.12.0.107.tar.xz
 e2326e672faf88d7acf9e74099865e5f97b6802b1c5d8c628d3c53c44aa2afdf99a1114e0f7857178a8ea166b940977d5cde1015c181d9b105e1241de78d38b9  0001-Avoid-setting-PTHREAD_PRIO_INHERIT-on-Alpine-since-t.patch"

@@ -11,7 +11,7 @@ workspace:
 
 steps:
 - name: build
-  image: spritsail/abuild:3.12
+  image: spritsail/abuild:3.13
   pull: always
   settings:
     publickey: https://alpine.spritsail.io/spritsail-alpine.rsa.pub
