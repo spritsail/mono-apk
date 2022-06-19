@@ -4,14 +4,14 @@
 # Maintainer:  frebib <mono-apk@spritsail.io>
 
 pkgname=mono
-pkgver=6.12.0.107
+pkgver=6.12.0.182
 pkgrel=0
 pkgdesc="Free implementation of the .NET platform including runtime and compiler"
 url="https://www.mono-project.com/"
-arch="x86_64 x86 armv7"
+arch="all !s390x !ppc64le !riscv64"
 license="MIT"
 depends_dev="libgdiplus-dev zlib-dev"
-makedepends="$depends_dev autoconf automake cmake libtool linux-headers paxmark python3"
+makedepends="$depends_dev autoconf automake bash cmake libtool linux-headers"
 subpackages="
 	$pkgname-dbg
 	$pkgname-dev
@@ -42,15 +42,6 @@ source="
 install="ca-certificates-$pkgname.post-deinstall"
 builddir="$srcdir/$pkgname-$pkgver"
 
-prepare() {
-	default_prepare
-
-	# We need to do this so it don't get killed in the build proces when
-	# MPROTECT and RANDMMAP is enable.
-	sed -i '/exec "/ i\paxmark mr "$(readlink -f "$MONO_EXECUTABLE")"' \
-		runtime/mono-wrapper.in
-}
-
 build() {
 	# Based on Fedora and SUSE package.
 	export CFLAGS="$CFLAGS -fno-strict-aliasing"
@@ -76,7 +67,8 @@ build() {
 		--with-x=no \
 		--with-libgc=none \
 		--with-mcs-docs=no \
-		--with-ikvm-native=no
+		--with-ikvm-native=no \
+		--without-sigaltstack
 
 	make -j$(nproc)
 }
@@ -86,7 +78,6 @@ package() {
 
 	cd "$pkgdir"
 
-	paxmark mr usr/bin/mono-sgen
 	sed -i 's|$mono_libdir/||g' etc/mono/config
 
 	# Remove .la files.
@@ -580,5 +571,5 @@ dbg() {
 		$(find \( -name '*.pdb' -o -name '*.mdb' \) 2>/dev/null)
 }
 
-sha512sums="567cd37847bd5a0bf78df8a3ada2ed2cfb10e466fffb5aadc3d145751552720bdd1fc2a734fba142b91f2e221f42b6717d6eb3f7c8823cbec3d458b10712d7ea  mono-6.12.0.107.tar.xz
+sha512sums="5f0f02f2adf89785af8f620c16d69fc97b87c9b39133286e6f1237a397f4842ea8d26802d9f802f8798a86540dc1bc3b5201428f218c78fbcf91f0d575cde512  mono-6.12.0.182.tar.xz
 e2326e672faf88d7acf9e74099865e5f97b6802b1c5d8c628d3c53c44aa2afdf99a1114e0f7857178a8ea166b940977d5cde1015c181d9b105e1241de78d38b9  0001-Avoid-setting-PTHREAD_PRIO_INHERIT-on-Alpine-since-t.patch"
